@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Учусь в сети — Онлайн-курсы</title>
+    <link rel="stylesheet" href="./assets/style.css">
+</head>
+<body>
+    <!-- ============================================
+         ШАПКА С НАВИГАЦИЕЙ
+         ============================================ -->
+    <header class="header">
+        <div class="header-inner">
+            <a href="#/dashboard" class="logo" onclick="router.navigate('dashboard')">
+                <img src="images/20220922_logo.jpg" alt="Учусь в сети">
+            </a>
+            <nav class="nav" id="mainNav">
+                <a href="#/dashboard" class="nav-link" data-page="dashboard" onclick="router.navigate('dashboard'); return false;">
+                    <i class="fas fa-user"></i> Личный кабинет
+                </a>
+                <a href="#/apply" class="nav-link" data-page="apply" onclick="router.navigate('apply'); return false;">
+                    <i class="fas fa-file-alt"></i> Подать заявку
+                </a>
+                <a href="#/admin" class="nav-link hidden" id="adminNavLink" data-page="admin" onclick="router.navigate('admin'); return false;">
+                    <i class="fas fa-shield-alt"></i> Админ-панель
+                </a>
+                <a href="#/login" class="nav-link" onclick="auth.logout(); return false;">
+                    <i class="fas fa-sign-out-alt"></i> Выйти
+                </a>
+            </nav>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </header>
+    <script src="./assets/script.js"></script>
+</body>
+</html>
