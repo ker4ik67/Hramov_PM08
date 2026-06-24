@@ -160,3 +160,161 @@ const toast = {
         this.show(message, 'info');
     }
 };
+
+// ============================================
+// COMMIT 3: Роутинг (SPA)
+// ============================================
+
+const router = {
+    currentPage: '',
+
+    routes: {
+        login: { page: 'login', auth: false },
+        register: { page: 'register', auth: false },
+        dashboard: { page: 'dashboard', auth: true },
+        apply: { page: 'apply', auth: true },
+        admin: { page: 'admin', auth: true, admin: true }
+    },
+
+    init() {
+        // Обработка изменения hash
+        window.addEventListener('hashchange', () => this.handleRoute());
+
+        // Первоначальная загрузка
+        this.handleRoute();
+    },
+
+    handleRoute() {
+        const hash = window.location.hash.replace('#/', '') || '';
+        const routeName = hash || 'login';
+        const route = this.routes[routeName];
+
+        if (!route) {
+            this.navigate('login');
+            return;
+        }
+
+        const currentUser = storage.getCurrentUser();
+
+        // Проверка авторизации
+        if (route.auth && !currentUser) {
+            this.navigate('login');
+            return;
+        }
+
+        // Проверка прав админа
+        if (route.admin && (!currentUser || currentUser.role !== 'admin')) {
+            this.navigate('dashboard');
+            toast.error('Доступ запрещён. Требуются права администратора.');
+            return;
+        }
+
+        // Если неавторизованный пытается попасть на защищённую страницу
+        if (!route.auth && currentUser && (routeName === 'login' || routeName === 'register')) {
+            this.navigate('dashboard');
+            return;
+        }
+
+        this.showPage(routeName);
+    },
+
+    showPage(pageName) {
+        // Скрываем все страницы
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.remove('page-active');
+        });
+
+        // Показываем нужную страницу
+        const targetPage = document.getElementById(`page-${pageName}`);
+        if (targetPage) {
+            targetPage.classList.add('page-active');
+        }
+
+        this.currentPage = pageName;
+
+        // Обновляем навигацию
+        this.updateNav();
+
+        // Обновляем видимость шапки
+        this.updateHeader();
+
+        // Инициализация страницы
+        this.initPage(pageName);
+
+        // Закрываем мобильное меню
+        closeMobileMenu();
+
+        // Скролл вверх
+        window.scrollTo(0, 0);
+    },
+
+    navigate(pageName) {
+        window.location.hash = `/${pageName}`;
+    },
+
+    updateNav() {
+        const currentUser = storage.getCurrentUser();
+
+        // Обновляем активные ссылки
+        document.querySelectorAll('.nav-link[data-page]').forEach(link => {
+            link.classList.toggle('active', link.dataset.page === this.currentPage);
+        });
+
+        // Показываем/скрываем ссылку админа
+        const adminLinks = [
+            document.getElementById('adminNavLink'),
+            document.getElementById('adminMobileLink')
+        ];
+        adminLinks.forEach(link => {
+            if (link) {
+                link.classList.toggle('hidden', !(currentUser && currentUser.role === 'admin'));
+            }
+        });
+    },
+
+    updateHeader() {
+        const currentUser = storage.getCurrentUser();
+        const header = document.querySelector('.header');
+
+        if (!currentUser && (this.currentPage === 'login' || this.currentPage === 'register')) {
+            // На страницах авторизации шапка видна, но упрощённая
+        }
+    },
+
+    initPage(pageName) {
+        const currentUser = storage.getCurrentUser();
+
+        switch (pageName) {
+            case 'dashboard':
+                if (currentUser) {
+                    document.getElementById('welcomeTitle').textContent =
+                        `Здравствуйте, ${currentUser.fullName}!`;
+                }
+                slider.init();
+                requests.renderUserRequests();
+                break;
+
+            case 'admin':
+                admin.renderStats();
+                admin.renderRequests();
+                break;
+
+            case 'apply':
+                // Установить минимальную дату — сегодня
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('applyStartDate').setAttribute('min', today);
+                break;
+
+            case 'login':
+                // Очистить форму
+                document.getElementById('loginForm').reset();
+                hideAllErrors();
+                break;
+
+            case 'register':
+                document.getElementById('registerForm').reset();
+                hideAllErrors();
+                break;
+        }
+    }
+};
