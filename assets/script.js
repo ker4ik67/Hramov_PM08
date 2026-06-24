@@ -318,3 +318,123 @@ const router = {
         }
     }
 };
+
+// ============================================
+// COMMIT 4: Аутентификация
+// ============================================
+
+const auth = {
+    // Регистрация
+    register(event) {
+        event.preventDefault();
+
+        const login = document.getElementById('regLogin').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const fullName = document.getElementById('regFullName').value.trim();
+        const phone = document.getElementById('regPhone').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+
+        // Сброс ошибок
+        hideAllErrors();
+
+        // Валидация
+        let hasError = false;
+
+        if (!utils.isValidLogin(login)) {
+            showError('regLogin', 'Логин должен содержать минимум 6 символов (латиница и цифры)');
+            hasError = true;
+        }
+
+        if (password.length < 8) {
+            showError('regPassword', 'Пароль должен содержать минимум 8 символов');
+            hasError = true;
+        }
+
+        if (!fullName) {
+            showError('regFullName', 'Введите ФИО');
+            hasError = true;
+        }
+
+        if (email && !utils.isValidEmail(email)) {
+            showError('regEmail', 'Введите корректный email');
+            hasError = true;
+        }
+
+        if (hasError) {
+            toast.error('Исправьте ошибки в форме');
+            return;
+        }
+
+        // Проверка уникальности логина
+        const users = storage.getUsers();
+        if (users.find(u => u.login === login)) {
+            showError('regLogin', 'Пользователь с таким логином уже существует');
+            toast.error('Логин уже занят');
+            return;
+        }
+
+        // Создание пользователя
+        const newUser = {
+            login,
+            password,
+            fullName,
+            phone,
+            email,
+            role: 'user'
+        };
+
+        users.push(newUser);
+        storage.saveUsers(users);
+
+        toast.success('Регистрация прошла успешно! Теперь вы можете войти.');
+        router.navigate('login');
+    },
+
+    // Авторизация
+    login(event) {
+        event.preventDefault();
+
+        const login = document.getElementById('loginLogin').value.trim();
+        const password = document.getElementById('loginPassword').value;
+
+        hideAllErrors();
+
+        if (!login || !password) {
+            toast.error('Введите логин и пароль');
+            return;
+        }
+
+        // Проверка админа
+        if (login === 'Admin26' && password === 'Demo20') {
+            const adminUser = {
+                login: 'Admin26',
+                fullName: 'Администратор',
+                role: 'admin'
+            };
+            storage.setCurrentUser(adminUser);
+            toast.success('Добро пожаловать, Администратор!');
+            router.navigate('admin');
+            return;
+        }
+
+        // Проверка обычного пользователя
+        const users = storage.getUsers();
+        const user = users.find(u => u.login === login && u.password === password);
+
+        if (!user) {
+            toast.error('Неверный логин или пароль');
+            return;
+        }
+
+        storage.setCurrentUser(user);
+        toast.success(`Добро пожаловать, ${user.fullName}!`);
+        router.navigate('dashboard');
+    },
+
+    // Выход
+    logout() {
+        storage.setCurrentUser(null);
+        toast.info('Вы вышли из системы');
+        router.navigate('login');
+    }
+};
