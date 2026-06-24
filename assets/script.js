@@ -438,3 +438,142 @@ const auth = {
         router.navigate('login');
     }
 };
+
+// ============================================
+// COMMIT 5: Валидация полей
+// ============================================
+
+function validateField(fieldId) {
+    const el = document.getElementById(fieldId);
+    const value = el.value.trim();
+    const errorEl = document.getElementById(fieldId + 'Error');
+
+    let error = '';
+
+    switch (fieldId) {
+        case 'regLogin':
+            if (value && !utils.isValidLogin(value)) {
+                error = 'Минимум 6 символов (латиница + цифры)';
+            }
+            break;
+        case 'regPassword':
+            if (value && value.length < 8) {
+                error = 'Минимум 8 символов';
+            }
+            break;
+        case 'regFullName':
+            if (value && value.length < 3) {
+                error = 'Введите полное ФИО';
+            }
+            break;
+        case 'regEmail':
+            if (value && !utils.isValidEmail(value)) {
+                error = 'Некорректный email';
+            }
+            break;
+    }
+
+    if (error) {
+        el.classList.add('error');
+        errorEl.textContent = error;
+        errorEl.classList.add('show');
+    } else {
+        el.classList.remove('error');
+        errorEl.classList.remove('show');
+    }
+}
+
+function showError(fieldId, message) {
+    const el = document.getElementById(fieldId);
+    const errorEl = document.getElementById(fieldId + 'Error');
+    el.classList.add('error');
+    errorEl.textContent = message;
+    errorEl.classList.add('show');
+}
+
+function hideAllErrors() {
+    document.querySelectorAll('.form-input.error').forEach(el => el.classList.remove('error'));
+    document.querySelectorAll('.form-error').forEach(el => {
+        el.textContent = '';
+        el.classList.remove('show');
+    });
+}
+
+// ============================================
+// COMMIT 6: Слайдер
+// ============================================
+
+const slider = {
+    currentSlide: 0,
+    slides: [],
+    dots: [],
+    autoPlayInterval: null,
+    autoPlayDelay: 3000,
+
+    init() {
+        const sliderEl = document.getElementById('dashboardSlider');
+        if (!sliderEl) return;
+
+        this.slides = sliderEl.querySelectorAll('.slide');
+        this.currentSlide = 0;
+
+        // Создать точки
+        const dotsContainer = document.getElementById('sliderDots');
+        dotsContainer.innerHTML = '';
+        this.dots = [];
+
+        this.slides.forEach((_, index) => {
+            const dot = document.createElement('button');
+            dot.className = 'slider-dot' + (index === 0 ? ' active' : '');
+            dot.onclick = () => this.goTo(index);
+            dotsContainer.appendChild(dot);
+            this.dots.push(dot);
+        });
+
+        // Показать первый слайд
+        this.updateSlides();
+
+        // Запустить автоплей
+        this.startAutoPlay();
+
+        // Пауза при наведении
+        sliderEl.addEventListener('mouseenter', () => this.stopAutoPlay());
+        sliderEl.addEventListener('mouseleave', () => this.startAutoPlay());
+    },
+
+    updateSlides() {
+        this.slides.forEach((slide, index) => {
+            slide.classList.toggle('active', index === this.currentSlide);
+        });
+        this.dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === this.currentSlide);
+        });
+    },
+
+    goTo(index) {
+        this.currentSlide = index;
+        this.updateSlides();
+    },
+
+    next() {
+        this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+        this.updateSlides();
+    },
+
+    prev() {
+        this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+        this.updateSlides();
+    },
+
+    startAutoPlay() {
+        this.stopAutoPlay();
+        this.autoPlayInterval = setInterval(() => this.next(), this.autoPlayDelay);
+    },
+
+    stopAutoPlay() {
+        if (this.autoPlayInterval) {
+            clearInterval(this.autoPlayInterval);
+            this.autoPlayInterval = null;
+        }
+    }
+};
