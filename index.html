@@ -34,6 +34,348 @@
             </button>
         </div>
     </header>
+
+    <!-- Мобильное меню -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#/dashboard" class="nav-link" onclick="router.navigate('dashboard'); toggleMobileMenu(); return false;">
+            <i class="fas fa-user"></i> Личный кабинет
+        </a>
+        <a href="#/apply" class="nav-link" onclick="router.navigate('apply'); toggleMobileMenu(); return false;">
+            <i class="fas fa-file-alt"></i> Подать заявку
+        </a>
+        <a href="#/admin" class="nav-link hidden" id="adminMobileLink" onclick="router.navigate('admin'); toggleMobileMenu(); return false;">
+            <i class="fas fa-shield-alt"></i> Админ-панель
+        </a>
+        <a href="#/login" class="nav-link" onclick="auth.logout(); toggleMobileMenu(); return false;">
+            <i class="fas fa-sign-out-alt"></i> Выйти
+        </a>
+    </div>
+
+    <!-- ============================================
+         ОСНОВНОЙ КОНТЕНТ
+         ============================================ -->
+    <main class="main">
+        <div class="container">
+
+            <!-- ====== СТРАНИЦА АВТОРИЗАЦИИ ====== -->
+            <div class="page" id="page-login">
+                <div class="auth-page">
+                    <div class="auth-card">
+                        <div class="auth-header">
+                            <img src="images/20220922_logo.jpg" alt="Учусь в сети">
+                            <h1>Вход в систему</h1>
+                            <p>Введите логин и пароль для входа</p>
+                        </div>
+                        <form id="loginForm" onsubmit="auth.login(event)">
+                            <div class="form-group">
+                                <label class="form-label">Логин</label>
+                                <input type="text" class="form-input" id="loginLogin" placeholder="Введите логин" required>
+                                <div class="form-error" id="loginLoginError"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Пароль</label>
+                                <input type="password" class="form-input" id="loginPassword" placeholder="Введите пароль" required>
+                                <div class="form-error" id="loginPasswordError"></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                <i class="fas fa-sign-in-alt"></i> Войти
+                            </button>
+                        </form>
+                        <div class="auth-footer">
+                            Еще не зарегистрированы? <a href="#/register" onclick="router.navigate('register'); return false;">Регистрация</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== СТРАНИЦА РЕГИСТРАЦИИ ====== -->
+            <div class="page" id="page-register">
+                <div class="auth-page">
+                    <div class="auth-card">
+                        <div class="auth-header">
+                            <img src="images/20220922_logo.jpg" alt="Учусь в сети">
+                            <h1>Регистрация</h1>
+                            <p>Создайте аккаунт для доступа к курсам</p>
+                        </div>
+                        <form id="registerForm" onsubmit="auth.register(event)">
+                            <div class="form-group">
+                                <label class="form-label">Логин *</label>
+                                <input type="text" class="form-input" id="regLogin" placeholder="Минимум 6 символов (латиница + цифры)" onblur="validateField('regLogin')">
+                                <div class="form-error" id="regLoginError"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Пароль *</label>
+                                <input type="password" class="form-input" id="regPassword" placeholder="Минимум 8 символов" onblur="validateField('regPassword')">
+                                <div class="form-error" id="regPasswordError"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">ФИО *</label>
+                                <input type="text" class="form-input" id="regFullName" placeholder="Фамилия Имя Отчество" onblur="validateField('regFullName')">
+                                <div class="form-error" id="regFullNameError"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Телефон</label>
+                                <input type="tel" class="form-input" id="regPhone" placeholder="+7 (XXX) XXX-XX-XX">
+                                <div class="form-error" id="regPhoneError"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" id="regEmail" placeholder="example@mail.ru" onblur="validateField('regEmail')">
+                                <div class="form-error" id="regEmailError"></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                <i class="fas fa-user-plus"></i> Зарегистрироваться
+                            </button>
+                        </form>
+                        <div class="auth-footer">
+                            Уже есть аккаунт? <a href="#/login" onclick="router.navigate('login'); return false;">Войти</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== ЛИЧНЫЙ КАБИНЕТ ====== -->
+            <div class="page" id="page-dashboard">
+                <div class="welcome-banner">
+                    <div>
+                        <h1 id="welcomeTitle">Здравствуйте!</h1>
+                        <p>Добро пожаловать в ваш личный кабинет</p>
+                    </div>
+                    <a href="#/apply" class="btn btn-success" onclick="router.navigate('apply'); return false;">
+                        <i class="fas fa-plus"></i> Подать заявку
+                    </a>
+                </div>
+
+                <!-- СЛАЙДЕР -->
+                <div class="section-title">
+                    <i class="fas fa-images"></i>
+                    <h2>Фотогалерея</h2>
+                </div>
+                <div class="slider" id="dashboardSlider">
+                    <div class="slider-slides">
+                        <!-- СЛАЙД 1: замените src="images/ваше_фото_1.jpg" -->
+                        <div class="slide active">
+                            <img src="images/image.jpeg" alt="Слайд 1 — Дистанционное обучение">
+                        </div>
+                        <!-- СЛАЙД 2: замените src="images/ваше_фото_2.jpg" -->
+                        <div class="slide">
+                            <img src="images/image (1).jpeg" alt="Слайд 2 — Сотрудники за работой">
+                        </div>
+                        <!-- СЛАЙД 3: замените src="images/ваше_фото_3.jpg" -->
+                        <div class="slide">
+                            <img src="images/image (2).jpeg" alt="Слайд 3 — Офис и производство">
+                        </div>
+                        <!-- СЛАЙД 4: замените src="images/ваше_фото_4.jpg" -->
+                        <div class="slide">
+                            <img src="images/image (3).jpeg" alt="Слайд 4 — Обучение ETP">
+                        </div>
+                    </div>
+                    <button class="slider-btn prev" onclick="slider.prev()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="slider-btn next" onclick="slider.next()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div class="slider-dots" id="sliderDots"></div>
+                </div>
+
+                <!-- ИСТОРИЯ ЗАЯВОК -->
+                <div class="section-title">
+                    <i class="fas fa-history"></i>
+                    <h2>История заявок</h2>
+                </div>
+                <div id="requestsList">
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>У вас пока нет заявок. <a href="#/apply" onclick="router.navigate('apply'); return false;">Подайте первую заявку</a>!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== ОФОРМЛЕНИЕ ЗАЯВКИ ====== -->
+            <div class="page" id="page-apply">
+                <div class="card" style="max-width: 600px; margin: 0 auto;">
+                    <div class="card-title">Оформление заявки</div>
+                    <div class="card-subtitle">Заполните форму для подачи заявки на обучение</div>
+
+                    <form id="applyForm" onsubmit="requests.submit(event)">
+                        <div class="form-group">
+                            <label class="form-label">Курс *</label>
+                            <select class="form-select" id="applyCourse" required>
+                                <option value="">Выберите курс</option>
+                                <option value="Повышение квалификации">Повышение квалификации</option>
+                                <option value="Курс переподготовки">Курс переподготовки</option>
+                                <option value="Курс по охране труда">Курс по охране труда</option>
+                            </select>
+                            <div class="form-error" id="applyCourseError"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Дата старта *</label>
+                            <input type="date" class="form-input" id="applyStartDate" required>
+                            <div class="form-error" id="applyStartDateError"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Способ оплаты *</label>
+                            <select class="form-select" id="applyPayment" required>
+                                <option value="">Выберите способ оплаты</option>
+                                <option value="Предоплата по QR-коду">Предоплата по QR-коду</option>
+                                <option value="Оплата картой МИР">Оплата картой МИР</option>
+                                <option value="Постоплата в офисе организации">Постоплата в офисе организации</option>
+                            </select>
+                            <div class="form-error" id="applyPaymentError"></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success" style="width: 100%;">
+                            <i class="fas fa-paper-plane"></i> Отправить заявку
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ====== АДМИН-ПАНЕЛЬ ====== -->
+            <div class="page" id="page-admin">
+                <div class="section-title">
+                    <i class="fas fa-shield-alt"></i>
+                    <h2>Панель администратора</h2>
+                </div>
+
+                <!-- Статистика -->
+                <div class="stats-grid" id="adminStats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">Всего заявок</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statNew" style="color: var(--info);">0</div>
+                        <div class="stat-label">Новые</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statProgress" style="color: var(--warning);">0</div>
+                        <div class="stat-label">В обучении</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statCompleted" style="color: var(--success);">0</div>
+                        <div class="stat-label">Завершено</div>
+                    </div>
+                </div>
+
+                <!-- Фильтры -->
+                <div class="card mb-24">
+                    <div class="filters-bar">
+                        <div class="filter-group">
+                            <label class="filter-label">Статус:</label>
+                            <select class="form-select" id="adminFilterStatus" onchange="admin.renderRequests()" style="min-width: 180px;">
+                                <option value="all">Все</option>
+                                <option value="Новая">Новая</option>
+                                <option value="Идёт обучение">Идёт обучение</option>
+                                <option value="Обучение завершено">Обучение завершено</option>
+                            </select>
+                        </div>
+                        <div class="filter-group" style="flex: 1;">
+                            <label class="filter-label">Поиск:</label>
+                            <input type="text" class="form-input search-input" id="adminSearch" placeholder="Поиск по ФИО..." oninput="admin.renderRequests()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Таблица заявок -->
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Пользователь</th>
+                                <th>Курс</th>
+                                <th>Дата старта</th>
+                                <th>Оплата</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminRequestsTable"></tbody>
+                    </table>
+                </div>
+
+                <!-- Пагинация -->
+                <div class="pagination" id="adminPagination"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ============================================
+         МОДАЛЬНОЕ ОКНО ОТЗЫВА
+         ============================================ -->
+    <div class="modal-overlay" id="reviewModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Оставить отзыв</div>
+                <button class="modal-close" onclick="requests.closeReviewModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form onsubmit="requests.submitReview(event)">
+                <input type="hidden" id="reviewRequestId">
+                <div class="form-group">
+                    <label class="form-label">Ваш отзыв</label>
+                    <textarea class="form-input" id="reviewText" rows="4" placeholder="Расскажите о ваших впечатлениях от курса..." required style="resize: vertical;"></textarea>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="requests.closeReviewModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Отправить отзыв
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================
+         ФУТЕР
+         ============================================ -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-section">
+                <h3><i class="fas fa-info-circle"></i> О компании</h3>
+                <p>Учусь в сети — образовательный портал дистанционного обучения. Повышение квалификации, профпереподготовка, курсы по охране труда.</p>
+                <div class="social-links">
+                    <a href="#" class="social-link" title="ВКонтакте">
+                        <i class="fab fa-vk"></i>
+                    </a>
+                    <a href="#" class="social-link" title="Одноклассники">
+                        <i class="fab fa-odnoklassniki"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3><i class="fas fa-map-marker-alt"></i> Контакты</h3>
+                <p>
+                    <i class="fas fa-home"></i> Адрес: г. Москва, ул. Большая Ордынка, д. 15<br>
+                    <i class="fas fa-phone"></i> Телефон горячей линии:<br>
+                    <a href="tel:+74951234567" style="font-size: 18px; font-weight: 500;">+7 (495) 123-45-67</a>
+                </p>
+            </div>
+            <div class="footer-section">
+                <h3><i class="fas fa-graduation-cap"></i> Наши курсы</h3>
+                <p>
+                    <i class="fas fa-check-circle" style="color: var(--success);"></i> Повышение квалификации<br>
+                    <i class="fas fa-check-circle" style="color: var(--success);"></i> Профпереподготовка<br>
+                    <i class="fas fa-check-circle" style="color: var(--success);"></i> Охрана труда<br>
+                    <i class="fas fa-check-circle" style="color: var(--success);"></i> Сертификация
+                </p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © 2025 Учусь в сети. Все права защищены.
+        </div>
+    </footer>
+
+    <!-- ============================================
+         TOAST-КОНТЕЙНЕР
+         ============================================ -->
+    <div class="toast-container" id="toastContainer"></div>
     <script src="./assets/script.js"></script>
 </body>
 </html>
