@@ -577,3 +577,368 @@ const slider = {
         }
     }
 };
+
+// ============================================
+// COMMIT 7: Заявки (CRUD)
+// ============================================
+
+const requests = {
+    // Подача заявки
+    submit(event) {
+        event.preventDefault();
+
+        const currentUser = storage.getCurrentUser();
+        if (!currentUser) {
+            toast.error('Необходимо авторизоваться');
+            router.navigate('login');
+            return;
+        }
+
+        const course = document.getElementById('applyCourse').value;
+        const startDate = document.getElementById('applyStartDate').value;
+        const payment = document.getElementById('applyPayment').value;
+
+        if (!course || !startDate || !payment) {
+            toast.error('Заполните все обязательные поля');
+            return;
+        }
+
+        const newRequest = {
+            id: utils.generateId(),
+            userLogin: currentUser.login,
+            course,
+            startDate,
+            payment,
+            status: 'Новая',
+            review: null,
+            createdAt: new Date().toISOString()
+        };
+
+        const allRequests = storage.getRequests();
+        allRequests.push(newRequest);
+        storage.saveRequests(allRequests);
+
+        toast.success('Заявка успешно создана!');
+        document.getElementById('applyForm').reset();
+        router.navigate('dashboard');
+    },
+
+    // Получить заявки текущего пользователя
+    getUserRequests() {
+        const currentUser = storage.getCurrentUser();
+        if (!currentUser) return [];
+        return storage.getRequests().filter(r => r.userLogin === currentUser.login);
+    },
+
+    // Отрисовать заявки пользователя
+    renderUserRequests() {
+        const container = document.getElementById('requestsList');
+        const userRequests = this.getUserRequests();
+
+        if (userRequests.length === 0) {
+            container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>У вас пока нет заявок. <a href="#/apply" onclick="router.navigate('apply'); return false;">Подайте первую заявку</a>!</p>
+                        </div>
+                    `;
+            return;
+        }
+
+        // Сортируем по дате создания (новые сверху)
+        const sorted = [...userRequests].sort((a, b) =>
+            new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        container.innerHTML = '<div class="requests-list">' +
+            sorted.map(req => this.renderRequestCard(req)).join('') +
+            '</div>';
+    },
+
+    renderRequestCard(req) {
+        const statusClass = req.status === 'Новая' ? 'status-new' :
+            req.status === 'Идёт обучение' ? 'status-progress' : 'status-completed';
+
+        const badgeClass = req.status === 'Новая' ? 'badge-info' :
+            req.status === 'Идёт обучение' ? 'badge-warning' : 'badge-success';
+
+        const statusIcon = req.status === 'Новая' ? 'fa-clock' :
+            req.status === 'Идёт обучение' ? 'fa-spinner fa-spin' : 'fa-check-circle';
+
+        let reviewHtml = '';
+        if (req.review) {
+            reviewHtml = `
+                        <div class="review-card">
+                            <div class="review-text">${utils.escapeHtml(req.review.text)}</div>
+                            <div class="review-date">
+                                <i class="fas fa-calendar"></i> ${utils.formatDateTime(req.review.date)}
+                            </div>
+                        </div>
+                    `;
+        }
+
+        const showReviewBtn = req.status === 'Обучение завершено' && !req.review;
+
+        return `
+                    <div class="request-item ${statusClass} fade-in">
+                        <div class="request-header">
+                            <div>
+                                <div class="request-title">${utils.escapeHtml(req.course)}</div>
+                                <div class="request-meta">
+                                    <span><i class="fas fa-calendar"></i> Старт: ${utils.formatDate(req.startDate)}</span>
+                                    <span><i class="fas fa-credit-card"></i> ${utils.escapeHtml(req.payment)}</span>
+                                    <span><i class="fas fa-hashtag"></i> №${req.id.substr(-6)}</span>
+                                </div>
+                            </div>
+                            <span class="badge ${badgeClass}">
+                                <i class="fas ${statusIcon}"></i> ${req.status}
+                            </span>
+                        </div>
+                        ${reviewHtml}
+                        ${showReviewBtn ? `
+                            <button class="btn btn-outline btn-sm mt-16" onclick="requests.openReviewModal('${req.id}')">
+                                <i class="fas fa-comment"></i> Оставить отзыв
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+    },
+
+    // Открыть модальное окно отзыва
+    openReviewModal(requestId) {
+        document.getElementById('reviewRequestId').value = requestId;
+        document.getElementById('reviewText').value = '';
+        document.getElementById('reviewModal').classList.add('active');
+    },
+
+    // Закрыть модальное окно отзыва
+    closeReviewModal() {
+        document.getElementById('reviewModal').classList.remove('active');
+    },
+
+    // Отправить отзыв
+    submitReview(event) {
+        event.preventDefault();
+
+        const requestId = document.getElementById('reviewRequestId').value;
+        const text = document.getElementById('reviewText').value.trim();
+
+        if (!text) {
+            toast.error('Введите текст отзыва');
+            return;
+        }
+
+        const allRequests = storage.getRequests();
+        const req = allRequests.find(r => r.id === requestId);
+
+        if (!req) {
+            toast.error('Заявка не найдена');
+            return;
+        }
+
+        req.review = {
+            text,
+            date: new Date().toISOString()
+        };
+
+        storage.saveRequests(allRequests);
+
+        this.closeReviewModal();
+        toast.success('Отзыв успешно отправлен!');
+        this.renderUserRequests();
+    }
+};
+
+// ============================================
+// COMMIT 8: Админ-панель
+// ============================================
+
+const admin = {
+    currentPage: 1,
+    itemsPerPage: 5,
+
+    // Отрисовать статистику
+    renderStats() {
+        const allRequests = storage.getRequests();
+        const newCount = allRequests.filter(r => r.status === 'Новая').length;
+        const progressCount = allRequests.filter(r => r.status === 'Идёт обучение').length;
+        const completedCount = allRequests.filter(r => r.status === 'Обучение завершено').length;
+
+        document.getElementById('statTotal').textContent = allRequests.length;
+        document.getElementById('statNew').textContent = newCount;
+        document.getElementById('statProgress').textContent = progressCount;
+        document.getElementById('statCompleted').textContent = completedCount;
+    },
+
+    // Получить отфильтрованные заявки
+    getFilteredRequests() {
+        const statusFilter = document.getElementById('adminFilterStatus').value;
+        const searchQuery = document.getElementById('adminSearch').value.trim().toLowerCase();
+
+        let filtered = storage.getRequests();
+
+        // Фильтр по статусу
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(r => r.status === statusFilter);
+        }
+
+        // Поиск по ФИО
+        if (searchQuery) {
+            const users = storage.getUsers();
+            filtered = filtered.filter(r => {
+                const user = users.find(u => u.login === r.userLogin);
+                const fullName = user ? user.fullName.toLowerCase() : '';
+                return fullName.includes(searchQuery);
+            });
+        }
+
+        return filtered;
+    },
+
+    // Отрисовать таблицу заявок
+    renderRequests() {
+        const tbody = document.getElementById('adminRequestsTable');
+        const allRequests = this.getFilteredRequests();
+
+        // Сортировка по дате (новые сверху)
+        const sorted = [...allRequests].sort((a, b) =>
+            new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        // Пагинация
+        const totalPages = Math.ceil(sorted.length / this.itemsPerPage) || 1;
+        if (this.currentPage > totalPages) this.currentPage = totalPages;
+
+        const start = (this.currentPage - 1) * this.itemsPerPage;
+        const paginated = sorted.slice(start, start + this.itemsPerPage);
+
+        const users = storage.getUsers();
+
+        if (paginated.length === 0) {
+            tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                                <i class="fas fa-inbox" style="font-size: 32px; display: block; margin-bottom: 8px; opacity: 0.5;"></i>
+                                Заявки не найдены
+                            </td>
+                        </tr>
+                    `;
+        } else {
+            tbody.innerHTML = paginated.map(req => {
+                const user = users.find(u => u.login === req.userLogin);
+                const userName = user ? user.fullName : req.userLogin;
+
+                const badgeClass = req.status === 'Новая' ? 'badge-info' :
+                    req.status === 'Идёт обучение' ? 'badge-warning' : 'badge-success';
+
+                const statusIcon = req.status === 'Новая' ? 'fa-clock' :
+                    req.status === 'Идёт обучение' ? 'fa-spinner fa-spin' : 'fa-check-circle';
+
+                const canProgress = req.status === 'Новая';
+                const canComplete = req.status === 'Идёт обучение';
+
+                return `
+                            <tr>
+                                <td>№${req.id.substr(-6)}</td>
+                                <td>${utils.escapeHtml(userName)}</td>
+                                <td>${utils.escapeHtml(req.course)}</td>
+                                <td>${utils.formatDate(req.startDate)}</td>
+                                <td>${utils.escapeHtml(req.payment)}</td>
+                                <td>
+                                    <span class="badge ${badgeClass}">
+                                        <i class="fas ${statusIcon}"></i> ${req.status}
+                                    </span>
+                                </td>
+                                <td>
+                                    ${canProgress ? `
+                                        <button class="btn btn-warning btn-sm" onclick="admin.updateStatus('${req.id}', 'Идёт обучение')">
+                                            <i class="fas fa-play"></i> В обучение
+                                        </button>
+                                    ` : ''}
+                                    ${canComplete ? `
+                                        <button class="btn btn-success btn-sm" onclick="admin.updateStatus('${req.id}', 'Обучение завершено')">
+                                            <i class="fas fa-check"></i> Завершить
+                                        </button>
+                                    ` : ''}
+                                    ${!canProgress && !canComplete ? `
+                                        <span style="color: var(--text-muted); font-size: 12px;">
+                                            <i class="fas fa-lock"></i> Завершено
+                                        </span>
+                                    ` : ''}
+                                </td>
+                            </tr>
+                        `;
+            }).join('');
+        }
+
+        // Отрисовать пагинацию
+        this.renderPagination(totalPages);
+    },
+
+    // Обновить статус заявки
+    updateStatus(requestId, newStatus) {
+        const allRequests = storage.getRequests();
+        const req = allRequests.find(r => r.id === requestId);
+
+        if (!req) {
+            toast.error('Заявка не найдена');
+            return;
+        }
+
+        req.status = newStatus;
+        storage.saveRequests(allRequests);
+
+        toast.success(`Статус заявки №${requestId.substr(-6)} изменён на "${newStatus}"`);
+        this.renderStats();
+        this.renderRequests();
+    },
+
+    // Отрисовать пагинацию
+    renderPagination(totalPages) {
+        const container = document.getElementById('adminPagination');
+
+        if (totalPages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+
+        // Кнопка "Назад"
+        html += `
+                    <button class="pagination-btn" ${this.currentPage === 1 ? 'disabled' : ''}
+                        onclick="admin.goToPage(${this.currentPage - 1})">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                `;
+
+        // Номера страниц
+        for (let i = 1; i <= totalPages; i++) {
+            html += `
+                        <button class="pagination-btn ${i === this.currentPage ? 'active' : ''}"
+                            onclick="admin.goToPage(${i})">${i}</button>
+                    `;
+        }
+
+        // Кнопка "Вперёд"
+        html += `
+                    <button class="pagination-btn" ${this.currentPage === totalPages ? 'disabled' : ''}
+                        onclick="admin.goToPage(${this.currentPage + 1})">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                `;
+
+        // Информация
+        const allRequests = this.getFilteredRequests();
+        const start = (this.currentPage - 1) * this.itemsPerPage + 1;
+        const end = Math.min(this.currentPage * this.itemsPerPage, allRequests.length);
+        html += `<span class="pagination-info">${start}–${end} из ${allRequests.length}</span>`;
+
+        container.innerHTML = html;
+    },
+
+    goToPage(page) {
+        this.currentPage = page;
+        this.renderRequests();
+    }
+};
