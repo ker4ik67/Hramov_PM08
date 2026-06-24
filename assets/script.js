@@ -942,3 +942,63 @@ const admin = {
         this.renderRequests();
     }
 };
+
+// ============================================
+// COMMIT 9: Мобильное меню и инициализация
+// ============================================
+
+function toggleMobileMenu() {
+    document.getElementById('mobileMenu').classList.toggle('open');
+}
+
+function closeMobileMenu() {
+    document.getElementById('mobileMenu').classList.remove('open');
+}
+
+// Инициализация приложения
+document.addEventListener('DOMContentLoaded', () => {
+    // Инициализировать хранилище
+    storage.init();
+
+    // Инициализировать роутер
+    router.init();
+
+    // Маска для телефона
+    const phoneInput = document.getElementById('regPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                if (value[0] === '7' || value[0] === '8') {
+                    value = value.substring(1);
+                }
+                let formatted = '+7';
+                if (value.length > 0) formatted += ' (' + value.substring(0, 3);
+                if (value.length >= 3) formatted += ') ' + value.substring(3, 6);
+                if (value.length >= 6) formatted += '-' + value.substring(6, 8);
+                if (value.length >= 8) formatted += '-' + value.substring(8, 10);
+                e.target.value = formatted;
+            }
+        });
+    }
+
+    // Закрытие модалки по клику на оверлей
+    document.getElementById('reviewModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            requests.closeReviewModal();
+        }
+    });
+
+    // Закрытие мобильного меню по клику вне
+    document.addEventListener('click', function (e) {
+        const menu = document.getElementById('mobileMenu');
+        const btn = document.getElementById('mobileMenuBtn');
+        if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
+            closeMobileMenu();
+        }
+    });
+});
+
+// Глобальные функции для onclick
+window.toggleMobileMenu = toggleMobileMenu;
+window.validateField = validateField;
