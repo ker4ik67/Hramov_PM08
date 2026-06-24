@@ -109,3 +109,54 @@ const storage = {
         }
     }
 };
+
+// ============================================
+// COMMIT 2: Toast-уведомления
+// ============================================
+
+const toast = {
+    container: document.getElementById('toastContainer'),
+
+    show(message, type = 'success') {
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast toast-${type}`;
+
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            warning: 'fa-exclamation-triangle',
+            info: 'fa-info-circle'
+        };
+
+        toastEl.innerHTML = `
+                    <i class="fas ${icons[type] || icons.success}"></i>
+                    <span>${utils.escapeHtml(message)}</span>
+                `;
+
+        this.container.appendChild(toastEl);
+
+        // Автоматическое скрытие через 3 секунды
+        setTimeout(() => {
+            toastEl.classList.add('hiding');
+            setTimeout(() => {
+                toastEl.remove();
+            }, 300);
+        }, 3000);
+    },
+
+    success(message) {
+        this.show(message, 'success');
+    },
+
+    error(message) {
+        this.show(message, 'error');
+    },
+
+    warning(message) {
+        this.show(message, 'warning');
+    },
+
+    info(message) {
+        this.show(message, 'info');
+    }
+};
